@@ -1,3 +1,5 @@
+import Index from "@/components/Index";
+
 export default function Home() {
-  return <div>HELLO</div>;
+  return <Index />;
 }

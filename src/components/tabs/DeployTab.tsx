@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpRight } from "lucide-react";
+import { deployMarketContract } from "@/actions/deploy";
 
 const DeployTab = () => {
   const [isDeployed, setIsDeployed] = useState(false);
@@ -13,13 +14,15 @@ const DeployTab = () => {
     risk: "GC...",
   };
 
-  const handleDeploy = () => {
-    setIsDeploying(true);
-    // Simulate deployment delay
-    setTimeout(() => {
+  const handleDeploy = async () => {
+    try {
+      setIsDeploying(true);
+      const id = await deployMarketContract();
+      console.log("Deployed:", id);
+    } finally {
       setIsDeployed(true);
       setIsDeploying(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -29,7 +32,7 @@ const DeployTab = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div>
             <div className="flex items-center">
               <span className="font-medium">Account:</span>
               <span className="ml-2">Generated Random</span>
@@ -66,7 +69,7 @@ const DeployTab = () => {
                         {contracts.market}
                       </code>
                       <a
-                        href={`https://stellar.expert/explorer/testnet/account/${contracts.market}`}
+                        href={`https://stellar.expert/explorer/testnet/contract/${contracts.market}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center text-xs text-stellar hover:underline"
@@ -85,7 +88,7 @@ const DeployTab = () => {
                         {contracts.hedge}
                       </code>
                       <a
-                        href={`https://stellar.expert/explorer/testnet/account/${contracts.hedge}`}
+                        href={`https://stellar.expert/explorer/testnet/contract/${contracts.hedge}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center text-xs text-stellar hover:underline"
@@ -104,7 +107,7 @@ const DeployTab = () => {
                         {contracts.risk}
                       </code>
                       <a
-                        href={`https://stellar.expert/explorer/testnet/account/${contracts.risk}`}
+                        href={`https://stellar.expert/explorer/testnet/contract/${contracts.risk}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center text-xs text-stellar hover:underline"

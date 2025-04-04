@@ -1,11 +1,19 @@
 import { Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 const Header = () => {
   return (
     <header className="border-b bg-white dark:bg-gray-950">
-      <div className="container flex h-16 items-center justify-between py-4">
+      <div className="container flex h-20 items-center justify-between py-4">
         <div className="flex items-center gap-2">
+          <Image
+            src="/logo.png"
+            width={64}
+            height={64}
+            priority
+            alt="Logo of the project"
+          />
           <h1 className="text-xl font-bold">Sentinel Dev Playground</h1>
         </div>
         <div className="flex items-center gap-2">

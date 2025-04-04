@@ -37,6 +37,14 @@ const DeployTab = () => {
     }
   };
 
+  const handleCopy = async (textToCopy: string) => {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+    } catch (err) {
+      console.error("Failed to copy text:", err);
+    }
+  };
+
   return (
     <Card className="border-0 shadow-none">
       <CardHeader>
@@ -80,6 +88,13 @@ const DeployTab = () => {
                       <code className="text-xs bg-muted p-1 rounded">
                         {marketContract}
                       </code>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopy(marketContract)}
+                      >
+                        Copy
+                      </Button>
                       <Link
                         href={`https://stellar.expert/explorer/testnet/contract/${marketContract}`}
                         target="_blank"
@@ -99,6 +114,13 @@ const DeployTab = () => {
                       <code className="text-xs bg-muted p-1 rounded">
                         {hedgeContract}
                       </code>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopy(hedgeContract)}
+                      >
+                        Copy
+                      </Button>
                       <Link
                         href={`https://stellar.expert/explorer/testnet/contract/${hedgeContract}`}
                         target="_blank"
@@ -118,6 +140,13 @@ const DeployTab = () => {
                       <code className="text-xs bg-muted p-1 rounded">
                         {riskContract}
                       </code>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopy(riskContract)}
+                      >
+                        Copy
+                      </Button>
                       <Link
                         href={`https://stellar.expert/explorer/testnet/contract/${riskContract}`}
                         target="_blank"

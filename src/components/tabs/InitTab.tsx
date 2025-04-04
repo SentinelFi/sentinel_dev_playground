@@ -19,8 +19,13 @@ import {
 } from "@/components/ui/tooltip";
 import { HelpCircle } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
+import { initMarket } from "@/actions/init";
 
 const InitTab = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [result, setResult] = useState("");
+
   const [formData, setFormData] = useState({
     marketContractId: "",
     network: "testnet",
@@ -34,7 +39,7 @@ const InitTab = () => {
     riskVaultAddress: "",
     commissionFee: "",
     riskScore: "",
-    isAutomatic: false,
+    isAutomatic: true,
     eventTimestamp: "",
     lockPeriod: "",
     unlockPeriod: "",
@@ -54,21 +59,35 @@ const InitTab = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Validate form here
-    const requiredFields = Object.entries(formData).filter(
-      ([key]) => key !== "description"
-    );
+  const handleSubmit = async (e: React.FormEvent) => {
+    try {
+      e.preventDefault();
 
-    const emptyFields = requiredFields.filter(([_, value]) => !value);
+      setIsSubmitting(true);
+      setResult("");
 
-    if (emptyFields.length > 0) {
-      toast.error("Please fill in all required fields");
-      return;
+      // const requiredFields = Object.entries(formData).filter(
+      //   ([key]) => key !== ""
+      // );
+      // const emptyFields = requiredFields.filter(([_, value]) => !value);
+      // if (emptyFields.length > 0) {
+      //   toast.error("Please fill in all required fields");
+      //   return;
+      // }
+
+      console.log("Market:", formData.marketContractId);
+
+      const returnedResult = await initMarket(formData.marketContractId);
+
+      console.log("Init:", returnedResult);
+      setResult(returnedResult);
+
+      toast.success("Market initialized!");
+    } catch (e: any) {
+      setResult(e.toString());
+    } finally {
+      setIsSubmitting(false);
     }
-
-    toast.success("Market initialized successfully!");
   };
 
   const setTimestampFromNow = (days: number) => {
@@ -83,7 +102,10 @@ const InitTab = () => {
   const fillAssetAddress = (type: "USDC" | "XLM") => {
     setFormData((prev) => ({
       ...prev,
-      assetAddress: type === "USDC" ? "GBB..." : "GDC...",
+      assetAddress:
+        type === "USDC"
+          ? "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA"
+          : "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
     }));
   };
 
@@ -100,7 +122,7 @@ const InitTab = () => {
                 <Label htmlFor="marketContractId">Market Contract ID</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -123,7 +145,7 @@ const InitTab = () => {
                 <Label htmlFor="network">Network</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -152,7 +174,7 @@ const InitTab = () => {
                 <Label htmlFor="name">Name</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -175,7 +197,7 @@ const InitTab = () => {
                 <Label htmlFor="description">Description</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -198,7 +220,7 @@ const InitTab = () => {
                 <Label htmlFor="adminAddress">Admin Address</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -237,7 +259,7 @@ const InitTab = () => {
                 <Label htmlFor="assetAddress">Asset Address</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -282,7 +304,7 @@ const InitTab = () => {
                 <Label htmlFor="oracleAddress">Oracle Address</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -323,7 +345,7 @@ const InitTab = () => {
                 <Label htmlFor="oracleName">Oracle Name</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -346,7 +368,7 @@ const InitTab = () => {
                 <Label htmlFor="hedgeVaultAddress">Hedge Vault Address</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -369,7 +391,7 @@ const InitTab = () => {
                 <Label htmlFor="riskVaultAddress">Risk Vault Address</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -392,7 +414,7 @@ const InitTab = () => {
                 <Label htmlFor="commissionFee">Commission Fee (%)</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -418,7 +440,7 @@ const InitTab = () => {
                 <Label htmlFor="riskScore">Risk Score</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -439,7 +461,7 @@ const InitTab = () => {
                   <SelectItem value="0">0 - Low Risk</SelectItem>
                   <SelectItem value="1">1 - Medium Risk</SelectItem>
                   <SelectItem value="2">2 - High Risk</SelectItem>
-                  <SelectItem value="3">3 - Very High Risk</SelectItem>
+                  <SelectItem value="3">3 - Unknown Risk</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -449,7 +471,7 @@ const InitTab = () => {
                 <Label htmlFor="isAutomatic">Is Automatic</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -477,7 +499,7 @@ const InitTab = () => {
                 <Label htmlFor="eventTimestamp">Event Unix Timestamp</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -485,6 +507,14 @@ const InitTab = () => {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+                <Link
+                  href={`https://www.unixtimestamp.com/`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-xs text-stellar hover:underline"
+                >
+                  https://www.unixtimestamp.com/
+                </Link>
               </div>
               <div className="flex flex-col space-y-2">
                 <Input
@@ -549,7 +579,7 @@ const InitTab = () => {
                 <Label htmlFor="lockPeriod">Lock Period (seconds)</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -574,7 +604,7 @@ const InitTab = () => {
                 <Label htmlFor="unlockPeriod">Unlock Period (seconds)</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger>
+                    <TooltipTrigger type="button">
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -595,10 +625,15 @@ const InitTab = () => {
             </div>
           </div>
 
-          <Button type="submit" className="w-full">
-            Initialize Market
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Initializing..." : "Initialize Market"}
           </Button>
         </form>
+        {result && (
+          <p className="text-center mt-4">
+            Result: <span>{result}</span>
+          </p>
+        )}
       </CardContent>
     </Card>
   );

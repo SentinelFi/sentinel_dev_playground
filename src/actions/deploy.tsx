@@ -22,10 +22,38 @@ export async function generateFundedKeypair() {
   return keypair;
 }
 
-export async function deployMarketContract() {
+export async function deployVaultContract(
+  sourceKeypair: Keypair
+): Promise<string> {
   try {
-    const sourceKeypair = await generateFundedKeypair();
+    const { signTransaction } = basicNodeSigner(
+      sourceKeypair,
+      networkPassphrase
+    );
 
+    const deployTx = await Client.deploy(null, {
+      networkPassphrase,
+      rpcUrl,
+      wasmHash: wasmHashVault,
+      publicKey: sourceKeypair.publicKey(),
+      signTransaction,
+    });
+
+    const { result: client } = await deployTx.signAndSend();
+    const id = client?.options?.contractId;
+
+    console.log("Vault ID:", id);
+    return id;
+  } catch (e) {
+    console.log("Failed to deploy market:", e);
+    return "";
+  }
+}
+
+export async function deployMarketContract(
+  sourceKeypair: Keypair
+): Promise<string> {
+  try {
     const { signTransaction } = basicNodeSigner(
       sourceKeypair,
       networkPassphrase
@@ -42,10 +70,18 @@ export async function deployMarketContract() {
     const { result: client } = await deployTx.signAndSend();
     const id = client?.options?.contractId;
 
-    console.log(id);
+    console.log("market ID:", id);
     return id;
   } catch (e) {
     console.log("Failed to deploy market:", e);
     return "";
   }
+}
+
+export async function deployMarket(): Promise<string[]> {
+  const sourceKeypair = await generateFundedKeypair();
+  const hedge = await deployVaultContract(sourceKeypair);
+  const risk = await deployVaultContract(sourceKeypair);
+  const market = await deployMarketContract(sourceKeypair);
+  return [hedge, risk, market];
 }

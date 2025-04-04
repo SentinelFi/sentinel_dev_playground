@@ -2,25 +2,37 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowUpRight } from "lucide-react";
-import { deployMarketContract } from "@/actions/deploy";
+import { deployMarket } from "@/actions/deploy";
+import { toast } from "sonner";
+import Link from "next/link";
 
 const DeployTab = () => {
   const [isDeployed, setIsDeployed] = useState(false);
   const [isDeploying, setIsDeploying] = useState(false);
-
-  const contracts = {
-    market: "GC...",
-    hedge: "GB...",
-    risk: "GC...",
-  };
+  const [hedgeContract, setHedgeContract] = useState("");
+  const [riskContract, setRiskContract] = useState("");
+  const [marketContract, setMarketContract] = useState("");
 
   const handleDeploy = async () => {
     try {
       setIsDeploying(true);
-      const id = await deployMarketContract();
-      console.log("Deployed:", id);
-    } finally {
+      const ids = await deployMarket();
+      if (!ids || ids.length < 3) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
+      console.log("Deployed:", ids);
+      setHedgeContract(ids[0]);
+      setRiskContract(ids[1]);
+      setMarketContract(ids[2]);
       setIsDeployed(true);
+    } catch (e) {
+      console.log("Deploy Error:", e);
+      setHedgeContract("");
+      setRiskContract("");
+      setMarketContract("");
+      setIsDeployed(false);
+    } finally {
       setIsDeploying(false);
     }
   };
@@ -35,7 +47,7 @@ const DeployTab = () => {
           <div>
             <div className="flex items-center">
               <span className="font-medium">Account:</span>
-              <span className="ml-2">Generated Random</span>
+              <span className="ml-2">Random Generated</span>
             </div>
             <div className="flex items-center">
               <span className="font-medium">Network:</span>
@@ -66,16 +78,16 @@ const DeployTab = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <code className="text-xs bg-muted p-1 rounded">
-                        {contracts.market}
+                        {marketContract}
                       </code>
-                      <a
-                        href={`https://stellar.expert/explorer/testnet/contract/${contracts.market}`}
+                      <Link
+                        href={`https://stellar.expert/explorer/testnet/contract/${marketContract}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center text-xs text-stellar hover:underline"
                       >
                         View <ArrowUpRight size={12} className="ml-1" />
-                      </a>
+                      </Link>
                     </div>
                   </div>
 
@@ -85,16 +97,16 @@ const DeployTab = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <code className="text-xs bg-muted p-1 rounded">
-                        {contracts.hedge}
+                        {hedgeContract}
                       </code>
-                      <a
-                        href={`https://stellar.expert/explorer/testnet/contract/${contracts.hedge}`}
+                      <Link
+                        href={`https://stellar.expert/explorer/testnet/contract/${hedgeContract}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center text-xs text-stellar hover:underline"
                       >
                         View <ArrowUpRight size={12} className="ml-1" />
-                      </a>
+                      </Link>
                     </div>
                   </div>
 
@@ -104,16 +116,16 @@ const DeployTab = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <code className="text-xs bg-muted p-1 rounded">
-                        {contracts.risk}
+                        {riskContract}
                       </code>
-                      <a
-                        href={`https://stellar.expert/explorer/testnet/contract/${contracts.risk}`}
+                      <Link
+                        href={`https://stellar.expert/explorer/testnet/contract/${riskContract}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center text-xs text-stellar hover:underline"
                       >
                         View <ArrowUpRight size={12} className="ml-1" />
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </div>

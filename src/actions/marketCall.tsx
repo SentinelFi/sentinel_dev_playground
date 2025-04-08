@@ -23,7 +23,7 @@ async function generateFundedKeypair() {
 export async function callWriteContractFunction(
   contractID: string,
   functionName: string,
-  params = {}
+  params: Record<string, any>
 ) {
   try {
     if (!contractID) return "Empty market contract ID.";
@@ -46,11 +46,13 @@ export async function callWriteContractFunction(
 
     const client: any = await Client.from(options);
 
-    // Dynamically call the function on the client object
-    const transaction = await client[functionName]({
+    const functionParams = {
       user: sourceKeypair.publicKey(),
-      params,
-    });
+      ...params,
+    };
+
+    // Dynamically call the function on the client object
+    const transaction = await client[functionName](functionParams);
 
     const sent = await transaction.signAndSend();
 

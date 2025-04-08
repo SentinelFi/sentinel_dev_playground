@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { callReadContractFunction } from "@/actions/marketCall";
+import {
+  callReadContractFunction,
+  callWriteContractFunction,
+} from "@/actions/marketCall";
 
 type FunctionParam = {
   name: string;
@@ -30,9 +33,17 @@ const CallMarketTab = () => {
   const [marketContractId, setMarketContractId] = useState("");
   const [selectedFunction, setSelectedFunction] = useState("");
   const [functionCategory, setFunctionCategory] = useState("");
-  const [paramValue, setParamValue] = useState("");
+  const [paramValue, setParamValue] = useState<Record<string, any>>({});
   const [responseData, setResponseData] = useState<string | null>(null);
   const [isCalling, setIsCalling] = useState<boolean>(false);
+
+  useEffect(() => {
+    const initialValues: Record<string, any> = {};
+    getRequiredParams().forEach((param) => {
+      initialValues[param.name] = "";
+    });
+    setParamValue(initialValues);
+  }, [selectedFunction]);
 
   const functionCategories: Record<string, CategoryWithParams> = {
     "read-no-param": {
@@ -70,6 +81,7 @@ const CallMarketTab = () => {
         "calculate_vault_assets_ratio",
         "calculate_vault_shares_ratio",
         "is_market_paused",
+        "extend_market_ttl",
       ],
     },
     "write-no-param": {
@@ -80,7 +92,6 @@ const CallMarketTab = () => {
         "dispute",
         "pause_market",
         "unpause_market",
-        "extend_market_ttl",
       ],
     },
     "read-with-param": {
@@ -125,12 +136,12 @@ const CallMarketTab = () => {
   const handleCategoryChange = (value: string) => {
     setFunctionCategory(value);
     setSelectedFunction("");
-    setParamValue("");
+    setParamValue({});
   };
 
   const handleFunctionChange = (value: string) => {
     setSelectedFunction(value);
-    setParamValue("");
+    setParamValue({});
   };
 
   const handleCallFunction = async () => {
@@ -138,42 +149,60 @@ const CallMarketTab = () => {
       setIsCalling(true);
       setResponseData("");
 
+      const requiredParams = getRequiredParams();
+      console.log("Required Params:", requiredParams);
+
+      let parsedParams = {};
+
+      requiredParams.forEach((param) => {
+        if (param.type === "number") {
+          parsedParams = {
+            ...parsedParams,
+            [param.name]: Number(paramValue[param.name]),
+          };
+        } else if (param.type === "boolean") {
+          parsedParams = {
+            ...parsedParams,
+            [param.name]:
+              paramValue[param.name].toLowerCase() === "true" ||
+              paramValue[param.name].toLowerCase() === "1",
+          };
+        } else {
+          parsedParams = {
+            ...parsedParams,
+            [param.name]: paramValue[param.name],
+          };
+        }
+      });
+
+      console.log(
+        "Calling fn: ",
+        selectedFunction,
+        " - params: ",
+        parsedParams
+      );
+
+      let result: string = "";
+
       if (
         functionCategory === "read-no-param" ||
         functionCategory === "read-with-param"
       ) {
-        const requiredParams = getRequiredParams();
-        console.log(requiredParams);
-
-        let parsedParams = {};
-        if (requiredParams.length === 1) {
-          const param = requiredParams[0];
-          if (param.type === "number") {
-            parsedParams = { [param.name]: Number(paramValue) };
-          } else if (param.type === "boolean") {
-            parsedParams = {
-              [param.name]: paramValue.toLowerCase() === "true",
-            };
-          } else {
-            parsedParams = { [param.name]: paramValue };
-          }
-        }
-
-        console.log(
-          "Calling fn: ",
-          selectedFunction,
-          " - params: ",
-          parsedParams
-        );
-
-        const result = await callReadContractFunction(
+        result = await callReadContractFunction(
           marketContractId,
           selectedFunction,
           parsedParams
         );
-        console.log("Market fn call:", result);
-        setResponseData(result);
+      } else {
+        result = await callWriteContractFunction(
+          marketContractId,
+          selectedFunction,
+          parsedParams
+        );
       }
+
+      console.log("Market fn call:", result);
+      setResponseData(result);
     } catch (e) {
       console.log("Market Error:", e);
     } finally {
@@ -252,14 +281,19 @@ const CallMarketTab = () => {
                 <Label>Parameters</Label>
                 {getRequiredParams().map((param, index) => (
                   <div key={index} className="grid gap-2">
-                    <Label htmlFor={`param-${index}`}>
+                    <Label htmlFor={param.name}>
                       {param.name} ({param.type})
                     </Label>
                     <Input
-                      id={`param-${index}`}
+                      id={param.name}
                       placeholder={`Enter ${param.name}`}
-                      value={paramValue}
-                      onChange={(e) => setParamValue(e.target.value)}
+                      value={paramValue[param.name] || ""}
+                      onChange={(e) =>
+                        setParamValue({
+                          ...paramValue,
+                          [param.name]: e.target.value,
+                        })
+                      }
                     />
                   </div>
                 ))}

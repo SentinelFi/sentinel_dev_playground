@@ -20,7 +20,7 @@ import {
 import { HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
-import { initMarket } from "@/actions/init";
+import { generateNewPublicKey, initMarket } from "@/actions/init";
 
 const InitTab = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,7 +31,7 @@ const InitTab = () => {
     network: "testnet",
     name: "",
     description: "",
-    adminAddress: "",
+    // adminAddress: "",
     assetAddress: "",
     oracleAddress: "",
     oracleName: "",
@@ -42,16 +42,16 @@ const InitTab = () => {
     isAutomatic: true,
     eventTimestamp: "",
     lockPeriod: "",
+    eventThreshold: "",
     unlockPeriod: "",
   });
 
-  const generateRandomAddress = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-    let result = "G";
-    for (let i = 0; i < 55; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+  const generateRandomAddress = async () => {
+    const result = await generateNewPublicKey();
+    setFormData((prev) => ({
+      ...prev,
+      oracleAddress: result,
+    }));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,18 +66,66 @@ const InitTab = () => {
       setIsSubmitting(true);
       setResult("");
 
-      // const requiredFields = Object.entries(formData).filter(
-      //   ([key]) => key !== ""
-      // );
-      // const emptyFields = requiredFields.filter(([_, value]) => !value);
-      // if (emptyFields.length > 0) {
-      //   toast.error("Please fill in all required fields");
-      //   return;
-      // }
+      const requiredFields = Object.entries(formData).filter(
+        ([key]) => key !== "isAutomatic"
+      );
+      const emptyFields = requiredFields.filter(([_, value]) => !value);
+      if (emptyFields.length > 0) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
 
-      console.log("Market:", formData.marketContractId);
+      console.log("Market ID:", formData.marketContractId);
+      console.log("Name:", formData.name);
+      console.log("Description:", formData.description);
+      console.log("Asset:", formData.assetAddress);
+      console.log("Oracle name:", formData.oracleName);
+      console.log("Oracle address:", formData.oracleAddress);
+      console.log("Hedge ID:", formData.hedgeVaultAddress);
+      console.log("Risk ID:", formData.riskVaultAddress);
+      console.log("Commission:", formData.commissionFee);
+      console.log("Risk score:", formData.riskScore);
+      console.log("Automatic:", formData.isAutomatic);
+      console.log("Unix time:", formData.eventTimestamp);
+      console.log("Lock time:", formData.lockPeriod);
+      console.log("Threshold time:", formData.eventThreshold);
+      console.log("Unlock time:", formData.unlockPeriod);
 
-      const returnedResult = await initMarket(formData.marketContractId);
+      const contractID: string = formData.marketContractId;
+      const name: string = formData.name;
+      const description: string = formData.description;
+      const asset_address: string = formData.assetAddress;
+      const trusted_oracle_name: string = formData.oracleName;
+      const trusted_oracle_address: string = formData.oracleAddress;
+      const hedge_vault_address: string = formData.hedgeVaultAddress;
+      const risk_vault_address: string = formData.riskVaultAddress;
+      const commission_fee: number = Number(formData.commissionFee);
+      const risk_score: number = Number(formData.riskScore);
+      const is_automatic: boolean = formData.isAutomatic;
+      const event_unix_timestamp: number = Number(formData.eventTimestamp);
+      const lock_period_in_seconds: number = Number(formData.lockPeriod);
+      const event_threshold_in_seconds: number = Number(
+        formData.eventThreshold
+      );
+      const unlock_period_in_seconds: number = Number(formData.unlockPeriod);
+
+      const returnedResult = await initMarket(
+        contractID,
+        name,
+        description,
+        asset_address,
+        trusted_oracle_name,
+        trusted_oracle_address,
+        hedge_vault_address,
+        risk_vault_address,
+        commission_fee,
+        risk_score,
+        is_automatic,
+        event_unix_timestamp,
+        lock_period_in_seconds,
+        event_threshold_in_seconds,
+        unlock_period_in_seconds
+      );
 
       console.log("Init:", returnedResult);
       setResult(returnedResult);
@@ -116,13 +164,14 @@ const InitTab = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* md:grid-cols-2 gap-4 */}
+          <div className="grid grid-cols-1">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="marketContractId">Market Contract ID</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -140,12 +189,64 @@ const InitTab = () => {
               />
             </div>
 
+            <div className="my-3"></div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="hedgeVaultAddress">Hedge Vault Address</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger type="button" tabIndex={-1}>
+                      <HelpCircle size={16} className="text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Address of the hedge vault for this market</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Input
+                id="hedgeVaultAddress"
+                name="hedgeVaultAddress"
+                placeholder="Enter hedge vault address"
+                value={formData.hedgeVaultAddress}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="my-3"></div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="riskVaultAddress">Risk Vault Address</Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger type="button" tabIndex={-1}>
+                      <HelpCircle size={16} className="text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Address of the risk vault for this market</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Input
+                id="riskVaultAddress"
+                name="riskVaultAddress"
+                placeholder="Enter risk vault address"
+                value={formData.riskVaultAddress}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="my-3"></div>
+
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="network">Network</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -169,12 +270,14 @@ const InitTab = () => {
               </Select>
             </div>
 
+            <div className="my-3"></div>
+
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="name">Name</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -192,12 +295,14 @@ const InitTab = () => {
               />
             </div>
 
+            <div className="my-3"></div>
+
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="description">Description</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -215,12 +320,14 @@ const InitTab = () => {
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="my-3"></div>
+
+            {/* <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="adminAddress">Admin Address</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -252,14 +359,14 @@ const InitTab = () => {
                   Random
                 </Button>
               </div>
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="assetAddress">Asset Address</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -299,12 +406,14 @@ const InitTab = () => {
               </div>
             </div>
 
+            <div className="my-3"></div>
+
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="oracleAddress">Oracle Address</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -328,24 +437,21 @@ const InitTab = () => {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      oracleAddress: generateRandomAddress(),
-                    }))
-                  }
+                  onClick={generateRandomAddress}
                 >
                   Random
                 </Button>
               </div>
             </div>
 
+            <div className="my-3"></div>
+
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="oracleName">Oracle Name</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -363,58 +469,14 @@ const InitTab = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="hedgeVaultAddress">Hedge Vault Address</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger type="button">
-                      <HelpCircle size={16} className="text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Address of the hedge vault for this market</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Input
-                id="hedgeVaultAddress"
-                name="hedgeVaultAddress"
-                placeholder="Enter hedge vault address"
-                value={formData.hedgeVaultAddress}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="riskVaultAddress">Risk Vault Address</Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger type="button">
-                      <HelpCircle size={16} className="text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Address of the risk vault for this market</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Input
-                id="riskVaultAddress"
-                name="riskVaultAddress"
-                placeholder="Enter risk vault address"
-                value={formData.riskVaultAddress}
-                onChange={handleInputChange}
-              />
-            </div>
+            <div className="my-3"></div>
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="commissionFee">Commission Fee (%)</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -435,12 +497,14 @@ const InitTab = () => {
               />
             </div>
 
+            <div className="my-3"></div>
+
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="riskScore">Risk Score</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -466,12 +530,14 @@ const InitTab = () => {
               </Select>
             </div>
 
+            <div className="my-3"></div>
+
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="isAutomatic">Is Automatic</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -494,12 +560,14 @@ const InitTab = () => {
               </div>
             </div>
 
+            <div className="my-3"></div>
+
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="eventTimestamp">Event Unix Timestamp</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -510,6 +578,7 @@ const InitTab = () => {
                 <Link
                   href={`https://www.unixtimestamp.com/`}
                   target="_blank"
+                  tabIndex={-1}
                   rel="noopener noreferrer"
                   className="flex items-center text-xs text-stellar hover:underline"
                 >
@@ -574,12 +643,14 @@ const InitTab = () => {
               </div>
             </div>
 
+            <div className="my-3"></div>
+
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="lockPeriod">Lock Period (seconds)</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -599,12 +670,43 @@ const InitTab = () => {
               />
             </div>
 
+            <div className="my-3"></div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="eventThreshold">
+                  Event Threshold (seconds)
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger type="button" tabIndex={-1}>
+                      <HelpCircle size={16} className="text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Event threshold in seconds</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <Input
+                id="eventThreshold"
+                name="eventThreshold"
+                type="number"
+                min="0"
+                placeholder="Enter event threshold"
+                value={formData.eventThreshold}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="my-3"></div>
+
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="unlockPeriod">Unlock Period (seconds)</Label>
                 <TooltipProvider>
                   <Tooltip>
-                    <TooltipTrigger type="button">
+                    <TooltipTrigger type="button" tabIndex={-1}>
                       <HelpCircle size={16} className="text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>

@@ -15,7 +15,7 @@ const wasmHashVault =
 /*
  * Generate a random keypair and fund it
  */
-export async function generateFundedKeypair() {
+async function generateFundedKeypair() {
   const keypair = Keypair.random();
   const server = new Server(rpcUrl);
   await server.requestAirdrop(keypair.publicKey());

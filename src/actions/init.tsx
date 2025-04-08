@@ -13,14 +13,35 @@ const wasmHash =
 /*
  * Generate a random keypair and fund it
  */
-export async function generateFundedKeypair() {
+async function generateFundedKeypair() {
   const keypair = Keypair.random();
   const server = new Server(rpcUrl);
   await server.requestAirdrop(keypair.publicKey());
   return keypair;
 }
 
-export async function initMarket(contractID: string): Promise<string> {
+export async function generateNewPublicKey(): Promise<string> {
+  const keypair = Keypair.random();
+  return keypair.publicKey();
+}
+
+export async function initMarket(
+  contractID: string,
+  name: string,
+  description: string,
+  asset_address: string,
+  trusted_oracle_name: string,
+  trusted_oracle_address: string,
+  hedge_vault_address: string,
+  risk_vault_address: string,
+  commission_fee: number,
+  risk_score: number,
+  is_automatic: boolean,
+  event_unix_timestamp: number,
+  lock_period_in_seconds: number,
+  event_threshold_in_seconds: number,
+  unlock_period_in_seconds: number
+): Promise<string> {
   try {
     if (!contractID) return "Empty market contract ID.";
 
@@ -44,35 +65,31 @@ export async function initMarket(contractID: string): Promise<string> {
 
     const client: any = await Client.from(options);
 
-    const res = await client.init({
+    const initTransaction = await client.init({
       user: sourceKeypair.publicKey(),
       data: {
-        name: "Nms",
-        description: "Desc",
+        name,
+        description,
         admin_address: sourceKeypair.publicKey(),
-        asset_address:
-          "CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA",
-        trusted_oracle_name: "Test",
-        trusted_oracle_address:
-          "GDVZSDU6YDZ53CFP4BMMAXDC4Y3UXOXT3N73MXKK2XPSRBJMZXZ5ZFV5",
-        hedge_vault_address:
-          "CAFZTNZ747ZEBAO242AX5WSPPIA65RDD6DGPEOYOWAS5BOM6TEA36AJZ",
-        risk_vault_address:
-          "CBSX6LLBTI7QBF26QCIIZUPUCGHH3SNWKLPNX7ZMPWMJK77Z2ZRHMLT5",
-        commission_fee: 5,
-        risk_score: 1,
-        is_automatic: true,
-        event_unix_timestamp: 1746651600,
-        lock_period_in_seconds: 600,
-        event_threshold_in_seconds: 600,
-        unlock_period_in_seconds: 600,
+        asset_address,
+        trusted_oracle_name,
+        trusted_oracle_address,
+        hedge_vault_address,
+        risk_vault_address,
+        commission_fee,
+        risk_score,
+        is_automatic,
+        event_unix_timestamp,
+        lock_period_in_seconds,
+        event_threshold_in_seconds,
+        unlock_period_in_seconds,
       },
     });
 
-    const sent = await res.signAndSend();
+    const sent = await initTransaction.signAndSend();
 
     console.log("Market init result:", sent.result);
-    console.log("Market init result:", res);
+    console.log("Market init full result:", sent);
 
     return JSON.stringify(sent.result);
   } catch (e) {

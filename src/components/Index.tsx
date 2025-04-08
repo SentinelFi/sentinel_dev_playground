@@ -11,19 +11,23 @@ import CallVaultTab from "@/components/tabs/CallVaultTab";
 const Index = () => {
   const [activeTab, setActiveTab] = useState("deploy");
 
-  const renderActiveTab = () => {
-    switch (activeTab) {
-      case "deploy":
-        return <DeployTab />;
-      case "init":
-        return <InitTab />;
-      case "call-market":
-        return <CallMarketTab />;
-      case "call-vault":
-        return <CallVaultTab />;
-      default:
-        return <DeployTab />;
-    }
+  // Store tab visibility instead of completely unmounting them
+  const [tabVisibility, setTabVisibility] = useState({
+    deploy: true,
+    init: false,
+    "call-market": false,
+    "call-vault": false,
+  });
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setTabVisibility((prev) => {
+      const newVisibility = { ...prev };
+      Object.keys(newVisibility).forEach((key) => {
+        newVisibility[key as keyof typeof newVisibility] = key === tab;
+      });
+      return newVisibility;
+    });
   };
 
   return (
@@ -31,9 +35,26 @@ const Index = () => {
       <Header />
       <main className="flex-1 container py-6">
         <div className="mb-6">
-          <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+          <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
         </div>
-        <div>{renderActiveTab()}</div>
+        <div>
+          <div style={{ display: tabVisibility["deploy"] ? "block" : "none" }}>
+            <DeployTab />
+          </div>
+          <div style={{ display: tabVisibility["init"] ? "block" : "none" }}>
+            <InitTab />
+          </div>
+          <div
+            style={{ display: tabVisibility["call-market"] ? "block" : "none" }}
+          >
+            <CallMarketTab />
+          </div>
+          <div
+            style={{ display: tabVisibility["call-vault"] ? "block" : "none" }}
+          >
+            <CallVaultTab />
+          </div>
+        </div>
       </main>
     </div>
   );

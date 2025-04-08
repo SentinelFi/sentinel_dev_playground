@@ -130,7 +130,7 @@ const InitTab = () => {
       console.log("Init:", returnedResult);
       setResult(returnedResult);
 
-      toast.success("Market initialized!");
+      toast.success("Market initialize call completed.");
     } catch (e: any) {
       setResult(e.toString());
     } finally {

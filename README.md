@@ -1,4 +1,4 @@
-Sentinel Developer Playground
+# Sentinel Developer Playground
 
 ---
 
@@ -50,3 +50,5 @@ bd3c43038d51193306a0d09fff37701a71650ea4efb16b84009241b8dc369ffc
 https://developers.stellar.org/docs/build/guides/transactions/invoke-contract-tx-sdk
 
 ---
+
+© All Rights Reserved.

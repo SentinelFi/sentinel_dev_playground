@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { callReadContractFunction } from "@/actions/marketCall";
 
 type FunctionParam = {
   name: string;
@@ -26,7 +27,7 @@ type CategoryWithParams = {
 };
 
 const CallMarketTab = () => {
-  const [marketId, setMarketId] = useState("");
+  const [marketContractId, setMarketContractId] = useState("");
   const [selectedFunction, setSelectedFunction] = useState("");
   const [functionCategory, setFunctionCategory] = useState("");
   const [paramValue, setParamValue] = useState("");
@@ -125,21 +126,54 @@ const CallMarketTab = () => {
     setFunctionCategory(value);
     setSelectedFunction("");
     setParamValue("");
-    setResponseData(null);
   };
 
   const handleFunctionChange = (value: string) => {
     setSelectedFunction(value);
     setParamValue("");
-    setResponseData(null);
   };
 
   const handleCallFunction = async () => {
     try {
       setIsCalling(true);
       setResponseData("");
-      const mockResponse = `TEST`;
-      setResponseData(mockResponse);
+
+      if (
+        functionCategory === "read-no-param" ||
+        functionCategory === "read-with-param"
+      ) {
+        const requiredParams = getRequiredParams();
+        console.log(requiredParams);
+
+        let parsedParams = {};
+        if (requiredParams.length === 1) {
+          const param = requiredParams[0];
+          if (param.type === "number") {
+            parsedParams = { [param.name]: Number(paramValue) };
+          } else if (param.type === "boolean") {
+            parsedParams = {
+              [param.name]: paramValue.toLowerCase() === "true",
+            };
+          } else {
+            parsedParams = { [param.name]: paramValue };
+          }
+        }
+
+        console.log(
+          "Calling fn: ",
+          selectedFunction,
+          " - params: ",
+          parsedParams
+        );
+
+        const result = await callReadContractFunction(
+          marketContractId,
+          selectedFunction,
+          parsedParams
+        );
+        console.log("Market fn call:", result);
+        setResponseData(result);
+      }
     } catch (e) {
       console.log("Market Error:", e);
     } finally {
@@ -160,8 +194,8 @@ const CallMarketTab = () => {
               <Input
                 id="marketId"
                 placeholder="Enter Market Contract ID"
-                value={marketId}
-                onChange={(e) => setMarketId(e.target.value)}
+                value={marketContractId}
+                onChange={(e) => setMarketContractId(e.target.value)}
               />
             </div>
 
@@ -235,7 +269,7 @@ const CallMarketTab = () => {
             <Button
               type="button"
               className="w-full"
-              disabled={!marketId || !selectedFunction || isCalling}
+              disabled={!marketContractId || !selectedFunction || isCalling}
               onClick={handleCallFunction}
             >
               {isCalling ? "Calling..." : "Call Function"}

@@ -1,5 +1,7 @@
 # Sentinel Developer Playground
 
+<img src="./public/logo.png" alt="project logo" width="128" height="128"/>
+
 ---
 
 ## Getting Started
